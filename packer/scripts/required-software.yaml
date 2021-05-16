@@ -1,0 +1,142 @@
+- name: Install required software
+  hosts: all
+  become: true
+
+  vars:
+    elasticpass: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      33393635336130333132656462323365306566613530666566313430323365363733303063323539
+      3633343461643831656130383436393662356438646464610a346233386266646438616264616161
+      38653364343239343338343037346231306664313130666363333331653462383431613131643237
+      6533386162393162300a316234333731336232363332393761663835626532356662663334623062
+      6562
+
+  tasks:
+    - name: Yum update
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Disable SeLinux
+      command: setenforce 0
+
+    - name: Permanently disable SeLinux
+      replace:
+        path: /etc/selinux/config
+        regexp: "s/^SELINUX=enforcing$"
+        replace: "SELINUX=permissive"
+
+    - name: Turn of swap
+      command: swapoff -a
+
+    - name: Add Kubernetes repo
+      yum_repository:
+        name: "Kubernetes"
+        description: "Kubernetes Repo"
+        baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64"
+        gpgkey: "https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
+
+    - name: Create k8s.conf file for iptables
+      file:
+        path: /etc/sysctl.d/k8s.conf
+        state: touch
+
+    - name: Enable firewall ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+      with_items:
+        - "10251/tcp"
+        - "10255/tcp"
+
+    - name: Create k8s sysctl file
+      file:
+        path: "/etc/sysctl.d/k8s.conf"
+        state: touch
+
+    - name: Enable ip bridge
+      lineinfile:
+        path: "/etc/sysctl.d/k8s.conf"
+        line: "{{ item }}"
+      with_items:
+        - "net.bridge.bridge-nf-call-ip6tables = 1"
+        - "net.bridge.bridge-nf-call-iptables = 1"
+
+    - name: Reload sysctl
+      command: sysctl --system
+
+    - name: Install Software Packages
+      yum:
+        name:
+          - wget
+          - unzip
+          - openscap-scanner
+          - scap-security-guide
+          - nfs-utils
+          - aide
+          - firewalld
+          - clamav
+          - clamd
+          - clamav-update
+          - clamav-data
+          - setroubleshoot
+          - setroubleshoot-server
+          - docker
+          - kubelet
+          - kubeadm
+        update_cache: true
+
+    - name: Auditd enable
+      systemd:
+        name: auditd
+        enabled: yes
+        state: started
+      become: true
+
+    - name: Docker enable
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+      become: true
+
+    - name: Unzip Security Guide
+      unarchive:
+        src: http://nexus.voight.org:8081/repository/STIG/rhel7/scap-security-guide-0.1.53.zip
+        dest: /home/centos
+        remote_src: yes
+
+    - name: ClamAV Log Directory
+      file:
+        path: /var/log/clamav
+        state: directory
+        owner: clamscan
+        group: clamscan
+
+    - name: Enable ClamAV Logging
+      lineinfile:
+        path: /etc/clamd.d/scan.conf
+        regexp: "^#LogFile /var/log/clamd.scan"
+        line: "LogFile /var/log/clamav/clamd.scan"
+
+    - name: Enable ClamAV Local Socket
+      lineinfile:
+        path: /etc/clamd.d/scan.conf
+        regexp: "^#LocalSocket"
+        line: "LocalSocket /run/clamd.scan/clamd.sock"
+
+    - name: Update ClamAV Database
+      command: freshclam
+
+    - name: Enable ClamAV Services
+      systemd:
+        name: "clamav-freshclam"
+        enabled: yes
+        state: started
+
+    - name: Enable ClamD Services
+      systemd:
+        name: "clamd@scan"
+        enabled: yes
+        state: started

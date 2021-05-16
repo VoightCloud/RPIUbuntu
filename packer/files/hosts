@@ -1,0 +1,47 @@
+127.0.0.1	localhost
+127.0.1.1	ugli
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+192.168.137.2  apple
+192.168.137.3  drive
+192.168.137.4  ugli
+192.168.137.5  mango
+192.168.137.6  pepper
+192.168.137.10 nexus nexus.voight.org pi0
+192.168.137.11 kpi1
+192.168.137.12 kpi2
+192.168.137.13 kpi3
+192.168.137.14 kpi4
+192.168.137.15 kpi5
+192.168.137.16 kpi6
+192.168.137.17 kpi7
+192.168.137.18 canary pi8
+192.168.137.19 skycam
+192.168.137.20 ugliv1
+192.168.137.21 ugliv2
+192.168.137.22 ugliv3
+192.168.137.23 ugliv4
+192.168.137.24 ugliv5
+192.168.137.25 ugliv6
+192.168.137.30 kiwi
+192.168.137.31 walnut pi9
+#192.168.137.80 dadcloud.voight.org
+#192.168.137.80 sonar.voight.org
+#192.168.137.80 jenkins.voight.org
+192.168.137.71  vault vault.voight.org
+192.168.137.72  postgresql postgresql.voight.org
+192.168.137.74	selenium-hub selenium-hub.voight.org
+192.168.137.76  kibana.voight.org
+192.168.137.77	openldap openldap.voight.org
+192.168.137.78  phpldapadmin phpldapadmin.voight.org
+192.168.137.161	bench
+192.168.137.183	radio
+192.168.137.192	sky
+192.168.137.196	minecraft
+192.168.137.184	space
